@@ -1,0 +1,12 @@
+MZJ CRM - Push Display Fix v8
+
+التعديل:
+- استبدال استقبال Firebase داخل Service Worker بمستمع push مباشر.
+- عرض الإشعار دائمًا داخل event.waitUntil باستخدام showNotification.
+- منع رسالة Chrome العامة: This site has been updated in the background.
+- إضافة silent:false وvibrate لإشعار النظام.
+- إجبار المتصفح على تحميل Service Worker الجديد عبر /sw.js?v=8 وupdateViaCache:none.
+- لا يوجد تعديل على تصميم أو منطق العملاء أو المحادثات.
+
+ملاحظة الصوت:
+صوت إشعار الخلفية يتحكم فيه Android/Chrome وقناة إشعارات التطبيق. الكود يطلب إشعارًا غير صامت، لكن لا يمكن لموقع PWA فرض ملف صوت مخصص في الخلفية.

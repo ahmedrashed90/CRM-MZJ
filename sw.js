@@ -1,70 +1,134 @@
-const CACHE_NAME = 'mzj-sales-pwa-v34';
+const CACHE_NAME = 'mzj-sales-pwa-v35';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/assets/app.css?v=26',
   '/assets/app.js?v=28',
-  '/assets/mzj-mobile-push-v1.js?v=3',
+  '/assets/mzj-mobile-push-v1.js?v=4',
   '/assets/mzj-notifications-lazy-v1.js?v=1',
   '/assets/mzj-chat-scroll-v25.js?v=26',
-  '/assets/mzj-pwa-install-v27.js?v=27',
+  '/assets/mzj-pwa-install-v27.js?v=28',
   '/assets/icons/icon-192.png',
   '/assets/icons/icon-512.png'
 ];
 
-try {
-  importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
-  importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
+const PUSH_SW_VERSION = 'mzj-push-sw-v8';
 
-  firebase.initializeApp({
-    apiKey: 'AIzaSyCd2paKL200XRdz2SwFEUzAtfg51xWL5QA',
-    authDomain: 'mzj-lead.firebaseapp.com',
-    projectId: 'mzj-lead',
-    storageBucket: 'mzj-lead.firebasestorage.app',
-    messagingSenderId: '470098288857',
-    appId: '1:470098288857:web:613125cfc1623b08abdec8',
-    measurementId: 'G-981Z1T6Z91'
-  });
-
-  const messaging = firebase.messaging();
-
-  messaging.onBackgroundMessage(payload => {
-    const data = payload?.data || {};
-    const notification = payload?.notification || {};
-
-    const title = data.title || notification.title || 'MZJ CRM';
-    const body = data.body || notification.body || 'إشعار جديد';
-    const targetUrl = data.url || payload?.fcmOptions?.link || '/#/dashboard';
-    const tag = data.eventId || data.notificationId || `mzj_${Date.now()}`;
-
-    return self.registration.showNotification(title, {
-      body,
-      icon: '/assets/icons/icon-192.png',
-      badge: '/assets/icons/icon-96.png',
-      dir: 'rtl',
-      lang: 'ar',
-      tag,
-      renotify: true,
-      vibrate: [250, 100, 250],
-      data: { ...data, url: targetUrl }
-    });
-  });
-} catch (error) {
-  console.warn('MZJ Firebase Messaging service worker initialization failed:', error);
+function asObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 }
+
+function clean(value) {
+  return String(value ?? '').trim();
+}
+
+function parsePushPayload(event) {
+  if (!event.data) return {};
+
+  try {
+    return asObject(event.data.json());
+  } catch {}
+
+  try {
+    const text = event.data.text();
+    return asObject(JSON.parse(text));
+  } catch {}
+
+  return {};
+}
+
+function buildNotification(payload) {
+  const root = asObject(payload);
+  const wrapped = asObject(root.FCM_MSG);
+  const message = Object.keys(wrapped).length ? wrapped : root;
+  const data = {
+    ...asObject(root.data),
+    ...asObject(message.data)
+  };
+  const notification = {
+    ...asObject(root.notification),
+    ...asObject(message.notification)
+  };
+  const fcmOptions = {
+    ...asObject(root.fcmOptions),
+    ...asObject(message.fcmOptions)
+  };
+
+  const title = clean(data.title || notification.title || root.title || 'MZJ CRM');
+  const body = clean(data.body || notification.body || root.body || 'إشعار جديد');
+  const targetUrl = clean(
+    data.url ||
+    notification.click_action ||
+    fcmOptions.link ||
+    '/#/dashboard'
+  );
+  const eventId = clean(
+    data.eventId ||
+    data.notificationId ||
+    message.messageId ||
+    root.messageId ||
+    `mzj_${Date.now()}`
+  );
+
+  const icon = clean(data.icon || notification.icon || '/assets/icons/icon-192.png');
+  const badge = clean(data.badge || notification.badge || '/assets/icons/icon-96.png');
+  const image = clean(data.image || notification.image || '');
+
+  const options = {
+    body,
+    icon,
+    badge,
+    dir: 'rtl',
+    lang: 'ar',
+    tag: eventId,
+    renotify: true,
+    silent: false,
+    vibrate: [250, 100, 250],
+    timestamp: Date.now(),
+    data: {
+      ...data,
+      eventId,
+      url: targetUrl,
+      swVersion: PUSH_SW_VERSION
+    }
+  };
+
+  if (image) options.image = image;
+
+  return { title, options };
+}
+
+/*
+  استقبال Push مباشرة من المتصفح بدون الاعتماد على تحميل Firebase SDK
+  داخل الـ Service Worker. هذا يضمن استدعاء showNotification داخل
+  event.waitUntil ويمنع إشعار Chrome العام:
+  "This site has been updated in the background".
+*/
+self.addEventListener('push', event => {
+  const payload = parsePushPayload(event);
+  const { title, options } = buildNotification(payload);
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
-  const notificationData = event.notification?.data || {};
-  const fcmMessage = notificationData.FCM_MSG || {};
-  const fcmData = fcmMessage.data || notificationData || {};
-  const rawTarget =
+  const notificationData = asObject(event.notification?.data);
+  const fcmMessage = asObject(notificationData.FCM_MSG);
+  const fcmData = {
+    ...notificationData,
+    ...asObject(fcmMessage.data)
+  };
+  const rawTarget = clean(
     notificationData.url ||
     fcmData.url ||
-    fcmMessage?.fcmOptions?.link ||
-    '/#/dashboard';
+    asObject(fcmMessage.fcmOptions).link ||
+    '/#/dashboard'
+  );
 
   let targetUrl = self.location.origin + '/#/dashboard';
   try {
