@@ -1,0 +1,10 @@
+MZJ CRM Mobile Push Receive Fix v5
+
+التعديل:
+- إضافة استقبال صريح للرسائل في الخلفية داخل sw.js.
+- إضافة استقبال للرسائل أثناء فتح التطبيق داخل mzj-mobile-push-v1.js.
+- عرض System Notification في الحالتين.
+- رفع إصدار Service Worker والكاش.
+
+مهم:
+هذه النسخة تعمل مع Notification Gateway v2 المرفق الذي يرسل Data-only Web Push لمنع التكرار وضمان أن Service Worker هو المسؤول عن عرض الإشعار.
