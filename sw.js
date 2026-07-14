@@ -49,14 +49,14 @@ firebase.initializeApp({
 
 firebase.messaging();
 
-const CACHE_NAME = 'mzj-sales-pwa-v29';
+const CACHE_NAME = 'mzj-sales-pwa-v30';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/assets/app.css?v=26',
   '/assets/app.js?v=26',
-  '/assets/mzj-notification-settings-v57.js?v=65',
+  '/assets/mzj-notification-settings-v57.js?v=66',
   '/assets/mzj-chat-scroll-v25.js?v=26',
   '/assets/icons/icon-192.png',
   '/assets/icons/icon-512.png'
