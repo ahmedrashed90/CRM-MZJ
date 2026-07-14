@@ -1,11 +1,11 @@
-const CACHE_NAME = 'mzj-sales-pwa-v32';
+const CACHE_NAME = 'mzj-sales-pwa-v33';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/assets/app.css?v=26',
-  '/assets/app.js?v=27',
-  '/assets/mzj-mobile-push-v1.js?v=2',
+  '/assets/app.js?v=28',
+  '/assets/mzj-mobile-push-v1.js?v=3',
   '/assets/mzj-notifications-lazy-v1.js?v=1',
   '/assets/mzj-chat-scroll-v25.js?v=26',
   '/assets/mzj-pwa-install-v27.js?v=27',
@@ -32,9 +32,13 @@ try {
   messaging.onBackgroundMessage(payload => {
     const data = payload?.data || {};
     const notification = payload?.notification || {};
-    const title = data.title || notification.title || 'MZJ CRM';
-    const body = data.body || notification.body || 'إشعار جديد';
+
+    if (notification.title || notification.body) return Promise.resolve();
+
+    const title = data.title || 'MZJ CRM';
+    const body = data.body || 'إشعار جديد';
     const targetUrl = data.url || '/#/dashboard';
+    const tag = data.eventId || data.notificationId || `mzj_${Date.now()}`;
 
     return self.registration.showNotification(title, {
       body,
@@ -42,7 +46,7 @@ try {
       badge: '/assets/icons/icon-96.png',
       dir: 'rtl',
       lang: 'ar',
-      tag: data.eventId || data.notificationId || undefined,
+      tag,
       renotify: true,
       vibrate: [250, 100, 250],
       data: { ...data, url: targetUrl }

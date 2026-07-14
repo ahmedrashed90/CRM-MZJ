@@ -1,0 +1,10 @@
+MZJ CRM Mobile Push + Session Fix V6
+
+1) Firebase login session uses IndexedDB persistence first, with localStorage fallback.
+2) Login fields support the Android/iPhone password manager.
+3) Old logout markers are cleared after a successful or restored login.
+4) Push registration starts only after authentication and dashboard loading are complete.
+5) A temporary Firestore permission-denied is retried after refreshing the Firebase ID token.
+6) The service worker is not forced to update on every app opening.
+7) Deploy Notification Gateway V3 to use a notification payload for reliable background display.
+8) No CRM design, dashboard, customer distribution, chat, or reporting logic was changed.
