@@ -1,0 +1,8 @@
+MZJ CRM Push Display Fix V7
+
+التعديل الوحيد:
+- إصلاح Service Worker لعرض عنوان ونص إشعار FCM بدل إشعار Chrome العام: This site has been updated in the background.
+- تم حذف شرط كان يوقف showNotification عندما يحتوي الـ payload على notification.title أو notification.body.
+- تم رفع إصدار Cache من v33 إلى v34 لضمان تفعيل Service Worker الجديد.
+
+لم يتم تغيير تصميم أو منطق الداش بورد أو تسجيل الدخول أو العملاء أو المحادثات.

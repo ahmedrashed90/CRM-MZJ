@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mzj-sales-pwa-v33';
+const CACHE_NAME = 'mzj-sales-pwa-v34';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -33,11 +33,9 @@ try {
     const data = payload?.data || {};
     const notification = payload?.notification || {};
 
-    if (notification.title || notification.body) return Promise.resolve();
-
-    const title = data.title || 'MZJ CRM';
-    const body = data.body || 'إشعار جديد';
-    const targetUrl = data.url || '/#/dashboard';
+    const title = data.title || notification.title || 'MZJ CRM';
+    const body = data.body || notification.body || 'إشعار جديد';
+    const targetUrl = data.url || payload?.fcmOptions?.link || '/#/dashboard';
     const tag = data.eventId || data.notificationId || `mzj_${Date.now()}`;
 
     return self.registration.showNotification(title, {
