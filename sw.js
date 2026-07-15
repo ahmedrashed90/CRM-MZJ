@@ -1,19 +1,19 @@
-const CACHE_NAME = 'mzj-sales-pwa-v35';
+const CACHE_NAME = 'mzj-sales-pwa-v36';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/assets/app.css?v=26',
   '/assets/app.js?v=28',
-  '/assets/mzj-mobile-push-v1.js?v=4',
+  '/assets/mzj-mobile-push-v1.js?v=5',
   '/assets/mzj-notifications-lazy-v1.js?v=1',
   '/assets/mzj-chat-scroll-v25.js?v=26',
-  '/assets/mzj-pwa-install-v27.js?v=28',
+  '/assets/mzj-pwa-install-v27.js?v=29',
   '/assets/icons/icon-192.png',
   '/assets/icons/icon-512.png'
 ];
 
-const PUSH_SW_VERSION = 'mzj-push-sw-v8';
+const PUSH_SW_VERSION = 'mzj-push-sw-v9';
 
 function asObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
