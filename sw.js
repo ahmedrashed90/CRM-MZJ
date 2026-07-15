@@ -1,11 +1,12 @@
-const CACHE_NAME = 'mzj-sales-pwa-v36';
+const CACHE_NAME = 'mzj-sales-pwa-v37';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/assets/app.css?v=26',
   '/assets/app.js?v=28',
-  '/assets/mzj-mobile-push-v1.js?v=5',
+  '/assets/mzj-mobile-push-v1.js?v=6',
+  '/assets/mzj-push-click-open-v10.js?v=10',
   '/assets/mzj-notifications-lazy-v1.js?v=1',
   '/assets/mzj-chat-scroll-v25.js?v=26',
   '/assets/mzj-pwa-install-v27.js?v=29',
@@ -13,7 +14,7 @@ const APP_SHELL = [
   '/assets/icons/icon-512.png'
 ];
 
-const PUSH_SW_VERSION = 'mzj-push-sw-v9';
+const PUSH_SW_VERSION = 'mzj-push-sw-v10';
 
 function asObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
@@ -114,6 +115,36 @@ self.addEventListener('push', event => {
   );
 });
 
+
+function buildNotificationClickUrl(rawTarget, data) {
+  let url;
+  try {
+    url = new URL(clean(rawTarget) || '/#/dashboard', self.location.origin);
+  } catch {
+    url = new URL('/#/dashboard', self.location.origin);
+  }
+
+  const values = {
+    mzjPush: '1',
+    type: clean(data.type || data.eventType),
+    leadId: clean(data.leadId || data.customerId || data.docId || data.id),
+    conversationId: clean(data.conversationId || data.convId || data.chatId || data.waConversationId),
+    phone: clean(data.phone || data.phoneNormalized || data.mobile || data.phoneNumber || data.customerPhone),
+    customerName: clean(data.customerName || data.displayName || data.fullName || data.name || data.leadName),
+    department: clean(data.department || data.departmentKey || data.section || data.serviceKey),
+    sourceName: clean(data.sourceName || data.source || data.channel || data.platform),
+    messageId: clean(data.messageId),
+    eventId: clean(data.eventId || data.notificationId)
+  };
+
+  for (const [key, value] of Object.entries(values)) {
+    if (value && !url.searchParams.get(key)) url.searchParams.set(key, value);
+  }
+
+  if (!url.hash) url.hash = '#/dashboard';
+  return url.href;
+}
+
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
@@ -130,10 +161,7 @@ self.addEventListener('notificationclick', event => {
     '/#/dashboard'
   );
 
-  let targetUrl = self.location.origin + '/#/dashboard';
-  try {
-    targetUrl = new URL(rawTarget, self.location.origin).href;
-  } catch {}
+  const targetUrl = buildNotificationClickUrl(rawTarget, fcmData);
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async clientList => {
