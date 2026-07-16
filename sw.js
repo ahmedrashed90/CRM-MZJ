@@ -1,12 +1,12 @@
-const CACHE_NAME = 'mzj-sales-pwa-v39-dashboard';
+const CACHE_NAME = 'mzj-sales-pwa-v40-dashboard-open-once';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/assets/app.css?v=29',
-  '/assets/app.js?v=29',
+  '/assets/app.js?v=30',
   '/assets/mzj-mobile-push-v1.js?v=6',
-  '/assets/mzj-push-click-open-v11.js?v=11',
+  '/assets/mzj-push-click-open-v12.js?v=12',
   '/assets/mzj-notifications-lazy-v1.js?v=1',
   '/assets/mzj-chat-scroll-v25.js?v=26',
   '/assets/mzj-pwa-install-v27.js?v=29',
@@ -14,7 +14,7 @@ const APP_SHELL = [
   '/assets/icons/icon-512.png'
 ];
 
-const PUSH_SW_VERSION = 'mzj-push-sw-v11';
+const PUSH_SW_VERSION = 'mzj-push-sw-v12';
 const CLICK_MESSAGE_TYPE = 'MZJ_PUSH_NOTIFICATION_CLICK';
 
 function asObject(value) {

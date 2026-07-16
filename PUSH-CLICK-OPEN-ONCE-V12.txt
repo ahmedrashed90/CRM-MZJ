@@ -1,0 +1,9 @@
+MZJ CRM - Notification conversation open-once fix v12
+
+- Notification click still opens the app and the related customer conversation.
+- The pending customer request is consumed immediately after the conversation opens.
+- Closing the conversation clears all pending notification-open keys.
+- Refreshing or reopening the app no longer opens the previous customer again.
+- Old v10/v11 requests without a timestamp are removed automatically.
+- A notification-open request expires automatically after 15 minutes if it cannot be matched.
+- No page, permission, distribution, report, or dashboard design logic was changed.
