@@ -1,10 +1,10 @@
-const CACHE_NAME = 'mzj-sales-pwa-v38';
+const CACHE_NAME = 'mzj-sales-pwa-v39-dashboard';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/assets/app.css?v=26',
-  '/assets/app.js?v=28',
+  '/assets/app.css?v=29',
+  '/assets/app.js?v=29',
   '/assets/mzj-mobile-push-v1.js?v=6',
   '/assets/mzj-push-click-open-v11.js?v=11',
   '/assets/mzj-notifications-lazy-v1.js?v=1',
