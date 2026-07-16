@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mzj-sales-pwa-v37';
+const CACHE_NAME = 'mzj-sales-pwa-v38';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -6,7 +6,7 @@ const APP_SHELL = [
   '/assets/app.css?v=26',
   '/assets/app.js?v=28',
   '/assets/mzj-mobile-push-v1.js?v=6',
-  '/assets/mzj-push-click-open-v10.js?v=10',
+  '/assets/mzj-push-click-open-v11.js?v=11',
   '/assets/mzj-notifications-lazy-v1.js?v=1',
   '/assets/mzj-chat-scroll-v25.js?v=26',
   '/assets/mzj-pwa-install-v27.js?v=29',
@@ -14,7 +14,8 @@ const APP_SHELL = [
   '/assets/icons/icon-512.png'
 ];
 
-const PUSH_SW_VERSION = 'mzj-push-sw-v10';
+const PUSH_SW_VERSION = 'mzj-push-sw-v11';
+const CLICK_MESSAGE_TYPE = 'MZJ_PUSH_NOTIFICATION_CLICK';
 
 function asObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
@@ -100,12 +101,6 @@ function buildNotification(payload) {
   return { title, options };
 }
 
-/*
-  استقبال Push مباشرة من المتصفح بدون الاعتماد على تحميل Firebase SDK
-  داخل الـ Service Worker. هذا يضمن استدعاء showNotification داخل
-  event.waitUntil ويمنع إشعار Chrome العام:
-  "This site has been updated in the background".
-*/
 self.addEventListener('push', event => {
   const payload = parsePushPayload(event);
   const { title, options } = buildNotification(payload);
@@ -114,7 +109,6 @@ self.addEventListener('push', event => {
     self.registration.showNotification(title, options)
   );
 });
-
 
 function buildNotificationClickUrl(rawTarget, data) {
   let url;
@@ -145,6 +139,94 @@ function buildNotificationClickUrl(rawTarget, data) {
   return url.href;
 }
 
+function notificationClickMessage(data, targetUrl) {
+  return {
+    type: CLICK_MESSAGE_TYPE,
+    data: { ...data, url: targetUrl }
+  };
+}
+
+function isSameOriginClient(client) {
+  try {
+    return new URL(client.url).origin === self.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+async function postClickMessage(client, data, targetUrl) {
+  if (!client) return;
+  try {
+    client.postMessage(notificationClickMessage(data, targetUrl));
+  } catch {}
+}
+
+async function focusThenNavigate(client, data, targetUrl) {
+  if (!client) return null;
+
+  /*
+    focus() is deliberately called before navigate(). On Android, awaiting a
+    navigation first can consume the notification-click user activation and
+    leave the standalone PWA hidden. Focusing immediately brings the app to
+    the foreground, then the URL and the selected conversation are applied.
+  */
+  let activeClient = client;
+  try {
+    activeClient = (await client.focus()) || client;
+  } catch {}
+
+  await postClickMessage(activeClient, data, targetUrl);
+
+  if ('navigate' in activeClient && activeClient.url !== targetUrl) {
+    try {
+      const navigatedClient = await activeClient.navigate(targetUrl);
+      if (navigatedClient) {
+        activeClient = navigatedClient;
+        await postClickMessage(activeClient, data, targetUrl);
+      }
+    } catch {}
+  }
+
+  return activeClient;
+}
+
+async function openOrFocusNotificationTarget(data, targetUrl) {
+  const allClients = await clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true
+  });
+
+  const appClients = allClients.filter(isSameOriginClient);
+  const visibleClient = appClients.find(client => client.visibilityState === 'visible');
+  const focusedClient = appClients.find(client => client.focused === true);
+
+  if (visibleClient || focusedClient) {
+    return focusThenNavigate(visibleClient || focusedClient, data, targetUrl);
+  }
+
+  /*
+    When the installed app is closed/backgrounded, launch the URL first instead
+    of navigating a hidden stale client. This makes Android open the standalone
+    PWA immediately. The URL carries all lead/conversation identifiers, so the
+    page can open the correct conversation after authentication and data load.
+  */
+  if (clients.openWindow) {
+    try {
+      const openedClient = await clients.openWindow(targetUrl);
+      if (openedClient) {
+        await postClickMessage(openedClient, data, targetUrl);
+        return openedClient;
+      }
+    } catch {}
+  }
+
+  if (appClients.length) {
+    return focusThenNavigate(appClients[0], data, targetUrl);
+  }
+
+  return null;
+}
+
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
@@ -164,21 +246,7 @@ self.addEventListener('notificationclick', event => {
   const targetUrl = buildNotificationClickUrl(rawTarget, fcmData);
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async clientList => {
-      for (const client of clientList) {
-        try {
-          if ('navigate' in client && client.url !== targetUrl) {
-            await client.navigate(targetUrl);
-          }
-          client.postMessage({
-            type: 'MZJ_PUSH_NOTIFICATION_CLICK',
-            data: { ...fcmData, url: targetUrl }
-          });
-          return client.focus();
-        } catch {}
-      }
-      return clients.openWindow ? clients.openWindow(targetUrl) : null;
-    })
+    openOrFocusNotificationTarget(fcmData, targetUrl)
   );
 });
 
