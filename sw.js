@@ -1,10 +1,10 @@
-const CACHE_NAME = 'mzj-sales-pwa-v40-dashboard-open-once';
+const CACHE_NAME = 'mzj-sales-pwa-v41-dashboard-fullscreen-notes';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/assets/app.css?v=29',
-  '/assets/app.js?v=30',
+  '/assets/app.css?v=31',
+  '/assets/app.js?v=31',
   '/assets/mzj-mobile-push-v1.js?v=6',
   '/assets/mzj-push-click-open-v12.js?v=12',
   '/assets/mzj-notifications-lazy-v1.js?v=1',
